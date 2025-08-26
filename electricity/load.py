@@ -28,9 +28,17 @@ class Loading:
     return_X_y: bool = False                # if True, returns (X, y)
 
     def load_data(self) -> pd.DataFrame:
-        path = Path(self.filepath)
-        if not path.exists():
-            raise FileNotFoundError(f"File not found: {path}")
+        raw_path = Path(self.filepath)
+        repo_root = Path(__file__).resolve().parents[1]
+        candidates = [
+            raw_path,
+            repo_root / "raw_data" / raw_path,
+            repo_root / raw_path,
+        ]
+        path = next((p for p in candidates if p.exists()), None)
+        if path is None:
+            tried = ", ".join(str(p) for p in candidates)
+            raise FileNotFoundError(f"File not found. Tried: {tried}")
 
         # Parse date on read
         df = pd.read_csv(path, parse_dates=[self.date_col])
