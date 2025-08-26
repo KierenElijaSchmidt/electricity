@@ -66,20 +66,6 @@ class Loading:
         if self.drop_duplicate_index and not df.index.is_unique:
             df = df[~df.index.duplicated(keep="first")]
 
-        # Optional time-based features (safe: derived from index only)
-        if self.create_time_features:
-            idx = df.index
-            # If tz-aware, use .tz_convert(None) for feature extraction granularity
-            idx_naive = idx.tz_convert(None) if getattr(idx, "tz", None) is not None else idx
-            df["dow"] = idx_naive.dayofweek.astype("Int8")        # 0=Mon
-            df["is_weekend"] = (df["dow"] >= 5).astype("Int8")
-            df["dom"] = idx_naive.day.astype("Int8")
-            df["weekofyear"] = idx_naive.isocalendar().week.astype("Int16")
-            df["month"] = idx_naive.month.astype("Int8")
-            df["quarter"] = idx_naive.quarter.astype("Int8")
-            df["is_month_start"] = idx_naive.is_month_start.astype("Int8")
-            df["is_month_end"] = idx_naive.is_month_end.astype("Int8")
-
         # Optional target-based lags/rolls (safe: all use shift -> past only)
         if self.create_target_lags and self.target_col in df.columns:
             y_series = df[self.target_col]
