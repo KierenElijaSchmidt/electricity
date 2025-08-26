@@ -119,9 +119,6 @@ class Preprocessor:
     add_date_features: bool = True
     random_state: int = 42
 
-<<<<<<< HEAD
-
-=======
     # internal
     df: Optional[pd.DataFrame] = None
     pipeline_: Optional[Pipeline] = None
@@ -142,7 +139,6 @@ class Preprocessor:
                 )
         self.df = df
         return self
->>>>>>> a8f82dd55b0ea670438bac9e71c59b5a78803f7b
 
     # -------------------------
     # Pipeline builder
@@ -170,9 +166,6 @@ class Preprocessor:
             ohe
         )
 
-<<<<<<< HEAD
-
-=======
         num_sel = make_column_selector(dtype_include=["int64", "float64", "Int8", "Int16", "Int32", "Int64", "float32", "float64"])
         cat_sel = make_column_selector(dtype_include=["object", "string", "category"])
 
@@ -236,4 +229,3 @@ class Preprocessor:
             "rmse_scores": cv["test_rmse"],
             "rmse_mean": float(np.mean(cv["test_rmse"])),
         }
->>>>>>> a8f82dd55b0ea670438bac9e71c59b5a78803f7b
