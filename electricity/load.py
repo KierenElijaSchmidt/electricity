@@ -18,7 +18,6 @@ class Loading:
         "holiday": {"Y": 1, "N": 0},
         "school_day": {"Y": 1, "N": 0},
     })
-    timezone: Optional[str] = None          # e.g., "UTC" or "Europe/Amsterdam"
     drop_duplicate_index: bool = True
     create_time_features: bool = True       # index-derived features (safe)
     create_target_lags: bool = False        # off by default; uses target shift() only
@@ -49,10 +48,6 @@ class Loading:
         # Indexing & ordering
         df = df.sort_values(self.date_col).set_index(self.date_col)
 
-        # Optional timezone handling
-        if self.timezone is not None and df.index.tz is None:
-            df.index = df.index.tz_localize(self.timezone)
-
         # Map binary columns safely
         for col, mapping in self.bool_maps.items():
             if col in df.columns:
@@ -74,13 +69,28 @@ class Loading:
         if self.drop_duplicate_index and not df.index.is_unique:
             df = df[~df.index.duplicated(keep="first")]
 
-        # Optional target-based lags/rolls (safe: all use shift -> past only)
-        if self.create_target_lags and self.target_col in df.columns:
-            y_series = df[self.target_col]
-            for L in self.lags:
-                df[f"{self.target_col}_lag{L}"] = y_series.shift(L)
-            for W in self.rolling_windows:
-                df[f"{self.target_col}_rollmean{W}"] = y_series.shift(1).rolling(W, min_periods=1).mean()
+        # --- Autoregressive feature: previous day's y value ---
+        # Create a new column with the previous value of the target column (lag 1)
+        if self.target_col in df.columns:
+            df[f"{self.target_col}_t_minus_1"] = df[self.target_col].shift(1)
+            
+            # Shift all other X columns (except t-1, school_day, holiday, date, and the target itself) by 1,
+            # and create new columns named as <col>_t_minus_1
+            exclude_cols = {
+                f"{self.target_col}_t_minus_1",
+                "school_day",
+                "holiday",
+                self.date_col,
+                self.target_col,  # Exclude the target column itself from being dropped
+            }
+            x_cols = [col for col in df.columns if col not in exclude_cols]
+            for col in x_cols:
+                df[f"{col}_t_minus_1"] = df[col].shift(1)
+            df = df.drop(columns=x_cols)
+
+            # After shifting, drop the first row (which will have NaN in the lag)
+            df = df.iloc[1:]
+
 
         # Optional numeric NA handling
         if self.fillna_numeric is not None:
