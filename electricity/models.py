@@ -42,11 +42,24 @@ except Exception:
 
 # models.py — REPLACE the whole _tscv_scores(...) helper with this version
 
-def _tscv_scores(pipeline, X: pd.DataFrame, y: pd.Series, n_splits: int = 5):
+def _tscv_scores(preprocessor, X: pd.DataFrame, y: pd.Series, model, n_splits: int = 5):
     """
-    Helper: run TimeSeriesSplit CV with R2 and RMSE on a given sklearn pipeline.
+    Helper: run TimeSeriesSplit CV with R2 and RMSE on a pipeline that consists of
+    the provided preprocessor followed by the specified model.
     Uses an RMSE scorer that doesn't rely on sklearn's 'squared' argument.
+
+    Args:
+        preprocessor: The preprocessing step to use in the pipeline.
+        X (pd.DataFrame): Feature data.
+        y (pd.Series): Target data.
+        model: The regression model to use (e.g., LinearRegression(), RandomForestRegressor(), etc.).
+        n_splits (int): Number of splits for TimeSeriesSplit.
+
+    Returns:
+        dict: Dictionary with R2 and RMSE scores (per split and mean).
     """
+    from sklearn.pipeline import make_pipeline
+
     tscv = TimeSeriesSplit(n_splits=n_splits)
     scoring = {
         "r2": make_scorer(r2_score),
@@ -58,6 +71,8 @@ def _tscv_scores(pipeline, X: pd.DataFrame, y: pd.Series, n_splits: int = 5):
             )
         ),
     }
+    # Compose the pipeline: preprocessor + user-specified model
+    pipeline = make_pipeline(preprocessor, model)
     cv = cross_validate(
         pipeline, X, y, cv=tscv, scoring=scoring, return_estimator=False, n_jobs=None
     )
