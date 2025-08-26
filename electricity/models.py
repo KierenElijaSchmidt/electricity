@@ -83,149 +83,90 @@ def _tscv_scores(preprocessor, X: pd.DataFrame, y: pd.Series, model, n_splits: i
         "rmse_mean": float(np.mean(cv["test_rmse"])),
     }
 
-def run_ml_models(
+
+def run_lstm(
+    preprocessor,
     X: pd.DataFrame,
     y: pd.Series,
+    window: int = 30,
+    epochs: int = 5,
+    batch_size: int = 32,
     n_splits: int = 5,
-    corr_threshold: float = 0.95,
-    add_date_features: bool = True,
-):
+) -> pd.DataFrame | None:
     """
-    Build the unified preprocessing pipeline (from preprocessing.Preprocessor)
-    and evaluate several classical ML models with TimeSeriesSplit CV.
-
-    Returns:
-        summary_df (pd.DataFrame), fitted_pipelines (dict[str, object])
-    """
-    models = {
-        "LinearRegression": LinearRegression(),
-        "RandomForest": RandomForestRegressor(n_estimators=200, random_state=42),
-    }
-    if XGBOOST_AVAILABLE:
-        models["XGBoost"] = xgb.XGBRegressor(
-            n_estimators=400, max_depth=6, learning_rate=0.05, subsample=0.8, colsample_bytree=0.8, random_state=42,
-            tree_method="hist", verbosity=0
-        )
-
-    fitted = {}
-    rows = []
-
-    for name, est in models.items():
-        # Build a fresh pipeline per estimator using the unified Preprocessor
-        pre = Preprocessor(
-            filepath="",  # not used when we pass data directly
-            add_date_features=add_date_features,
-            corr_threshold=corr_threshold,
-        )
-        pre.set_data(pd.concat([X, y.rename(pre.target_col)], axis=1))  # ensures DatetimeIndex etc.
-        pipe = pre.build_pipeline(estimator=est)
-
-        scores = _tscv_scores(pipe, X, y, n_splits=n_splits)
-        # Fit on full data for downstream use
-        pipe.fit(X, y)
-        fitted[name] = pipe
-
-        rows.append({
-            "Model": name,
-            "R2_mean": scores["r2_mean"],
-            "R2_std": float(np.std(scores["r2_scores"])),
-            "RMSE_mean": scores["rmse_mean"],
-            "RMSE_std": float(np.std(scores["rmse_scores"])),
-        })
-
-    summary = pd.DataFrame(rows).sort_values("R2_mean", ascending=False).reset_index(drop=True)
-    return summary, fitted
-
-
-def run_arima(y: pd.Series, horizon: int = 30, order=(5, 1, 0)) -> pd.DataFrame | None:
-    """
-    Simple ARIMA baseline on the target series (train/test split by last `horizon` points).
-    """
-    if not STATSMODELS_AVAILABLE:
-        return None
-    if len(y) <= horizon:
-        return None
-
-    train, test = y.iloc[:-horizon], y.iloc[-horizon:]
-    model = sm.tsa.ARIMA(train, order=order)
-    res = model.fit()
-    preds = res.forecast(steps=len(test))
-    r2 = r2_score(test, preds)
-    rmse = float(np.sqrt(mean_squared_error(test, preds)))
-    return pd.DataFrame([{
-        "Model": "ARIMA",
-        "R2_mean": float(r2),
-        "R2_std": 0.0,
-        "RMSE_mean": rmse,
-        "RMSE_std": 0.0,
-    }])
-
-
-def _prepare_seq(series: np.ndarray, window: int = 30):
-    Xs, Ys = [], []
-    for i in range(len(series) - window):
-        Xs.append(series[i:i + window])
-        Ys.append(series[i + window])
-    Xs = np.array(Xs).reshape(-1, window, 1)
-    Ys = np.array(Ys)
-    return Xs, Ys
-
-
-def run_lstm(y: pd.Series, window: int = 30, epochs: int = 5, batch_size: int = 32) -> pd.DataFrame | None:
-    """
-    Lightweight univariate LSTM baseline on the target series.
+    LSTM baseline using the provided preprocessor and feature set, analogous to _tscv_scores.
+    Runs TimeSeriesSplit CV, applies the preprocessor, and fits an LSTM on the transformed data.
+    Only supports univariate prediction (y).
     """
     if not TF_AVAILABLE:
         return None
-    series = y.values.astype("float32")
-    if len(series) <= window + 10:
+    from sklearn.model_selection import TimeSeriesSplit
+
+    # Prepare results
+    r2_scores = []
+    rmse_scores = []
+
+    tscv = TimeSeriesSplit(n_splits=n_splits)
+    splits = list(tscv.split(X, y))
+    if len(splits) == 0:
         return None
 
-    Xs, Ys = _prepare_seq(series, window)
-    split = int(len(Xs) * 0.8)
-    X_train, X_test = Xs[:split], Xs[split:]
-    y_train, y_test = Ys[:split], Ys[split:]
+    for train_idx, test_idx in splits:
+        # Preprocess X
+        X_train_raw, X_test_raw = X.iloc[train_idx], X.iloc[test_idx]
+        y_train_raw, y_test_raw = y.iloc[train_idx], y.iloc[test_idx]
 
-    model = Sequential([LSTM(64, input_shape=(window, 1)), Dense(1)])
-    model.compile(optimizer="adam", loss="mse")
-    model.fit(X_train, y_train, epochs=epochs, batch_size=batch_size, verbose=0)
+        # Fit preprocessor on train, transform both
+        X_train = preprocessor.fit_transform(X_train_raw, y_train_raw)
+        X_test = preprocessor.transform(X_test_raw)
 
-    preds = model.predict(X_test, verbose=0).flatten()
-    r2 = r2_score(y_test, preds)
-    rmse = float(np.sqrt(mean_squared_error(y_test, preds)))
+        # If X_train is a DataFrame, convert to ndarray
+        if hasattr(X_train, "to_numpy"):
+            X_train = X_train.to_numpy()
+        if hasattr(X_test, "to_numpy"):
+            X_test = X_test.to_numpy()
+
+        # Univariate: use only the first column if X_train is 2D with more than 1 feature
+        if X_train.ndim == 2 and X_train.shape[1] > 1:
+            X_train_seq = X_train[:, 0]
+            X_test_seq = X_test[:, 0]
+        else:
+            X_train_seq = X_train.ravel()
+            X_test_seq = X_test.ravel()
+
+        # Prepare sequences for LSTM
+        def _prepare_seq(series, window):
+            Xs, Ys = [], []
+            for i in range(len(series) - window):
+                Xs.append(series[i : i + window])
+                Ys.append(series[i + window])
+            return np.array(Xs)[..., np.newaxis], np.array(Ys)
+
+        Xs_train, Ys_train = _prepare_seq(X_train_seq, window)
+        Xs_test, Ys_test = _prepare_seq(X_test_seq, window)
+
+        # If not enough data for a split, skip
+        if len(Xs_train) == 0 or len(Xs_test) == 0:
+            continue
+
+        # Build and fit LSTM
+        model = Sequential([LSTM(64, input_shape=(window, 1)), Dense(1)])
+        model.compile(optimizer="adam", loss="mse")
+        model.fit(Xs_train, Ys_train, epochs=epochs, batch_size=batch_size, verbose=0)
+
+        preds = model.predict(Xs_test, verbose=0).flatten()
+        r2 = r2_score(Ys_test, preds)
+        rmse = float(np.sqrt(mean_squared_error(Ys_test, preds)))
+        r2_scores.append(r2)
+        rmse_scores.append(rmse)
+
+    if not r2_scores:
+        return None
+
     return pd.DataFrame([{
         "Model": "LSTM",
-        "R2_mean": float(r2),
-        "R2_std": 0.0,
-        "RMSE_mean": rmse,
-        "RMSE_std": 0.0,
+        "R2_mean": float(np.mean(r2_scores)),
+        "R2_std": float(np.std(r2_scores)),
+        "RMSE_mean": float(np.mean(rmse_scores)),
+        "RMSE_std": float(np.std(rmse_scores)),
     }])
-
-
-def run_all_experiments(
-    X: pd.DataFrame,
-    y: pd.Series,
-    n_splits: int = 5,
-    include_arima: bool = True,
-    include_lstm: bool = True,
-) -> pd.DataFrame:
-    """
-    Orchestrates ML pipelines (unified preprocessing), plus optional ARIMA and LSTM.
-    Returns a single summary DataFrame.
-    """
-    results = []
-
-    ml_summary, _ = run_ml_models(X, y, n_splits=n_splits)
-    results.append(ml_summary)
-
-    if include_arima:
-        arima_res = run_arima(y)
-        if arima_res is not None:
-            results.append(arima_res)
-
-    if include_lstm:
-        lstm_res = run_lstm(y)
-        if lstm_res is not None:
-            results.append(lstm_res)
-
-    return pd.concat(results, ignore_index=True)
