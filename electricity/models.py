@@ -10,7 +10,7 @@ from sklearn.linear_model import LinearRegression
 from sklearn.ensemble import RandomForestRegressor
 
 # reuse the unified pipeline builder (date features + preprocessing + corr pruning)
-from preprocessing import Preprocessor
+from electricity.preprocessing import Preprocessor
 
 # ---- Optional models ----
 try:
