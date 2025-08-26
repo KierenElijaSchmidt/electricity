@@ -10,9 +10,6 @@ import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.compose import make_column_selector, make_column_transformer
 from sklearn.impute import SimpleImputer
-from sklearn.linear_model import LinearRegression
-from sklearn.metrics import make_scorer, r2_score, mean_squared_error
-from sklearn.model_selection import TimeSeriesSplit, cross_validate
 from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.preprocessing import OneHotEncoder, RobustScaler
 
@@ -143,10 +140,10 @@ class Preprocessor:
     # -------------------------
     # Pipeline builder
     # -------------------------
-    def build_pipeline(self, estimator=None) -> Pipeline:
+    def build_pipeline(self) -> Pipeline:
         """
-        Build an end-to-end pipeline:
-          [Date features] -> ColumnTransformer -> CorrelationSelector -> Estimator
+        Build a preprocessing pipeline only:
+          [Date features] -> ColumnTransformer -> CorrelationSelector
         """
         # OneHotEncoder compatibility for sklearn versions:
         ohe_kwargs = dict(handle_unknown="ignore", drop="first")
@@ -180,52 +177,8 @@ class Preprocessor:
             steps.append(("date_features", DateCyclicalFeatures(self.date_col)))
         steps.append(("pre", pre_ct))
         steps.append(("corr_prune", CorrelationSelector(threshold=self.corr_threshold, verbose=True)))
-        steps.append(("est", estimator if estimator is not None else LinearRegression()))
 
         self.pipeline_ = Pipeline(steps)
         return self.pipeline_
 
-    # -------------------------
-    # Train & evaluate
-    # -------------------------
-    def evaluate(self, n_splits: int = 5, estimator=None):
-        """
-        TimeSeriesSplit cross-validation with R^2 and RMSE.
-        Returns scores and a fitted pipeline on the full data.
-        """
-        if self.df is None:
-            self.load_data()
-        if self.pipeline_ is None or estimator is not None:
-            self.build_pipeline(estimator=estimator)
-
-        X = self.df.drop(columns=[self.target_col])
-        y = self.df[self.target_col]
-
-        tscv = TimeSeriesSplit(n_splits=n_splits)
-
-        scoring = {
-            "r2": make_scorer(r2_score),
-            # RMSE scorer compatible with older sklearn (no 'squared' kw) and supports sample_weight
-            "rmse": make_scorer(
-                lambda yt, yp, **kw: float(
-                    np.sqrt(
-                        np.average((np.asarray(yt) - np.asarray(yp)) ** 2, weights=kw.get("sample_weight"))
-                    )
-                )
-            ),
-        }
-
-
-
-        # cross-validate the full pipeline (no leakage)
-        cv = cross_validate(self.pipeline_, X, y, cv=tscv, scoring=scoring, n_jobs=None, return_train_score=False)
-        # fit on full data for downstream use
-        self.pipeline_.fit(X, y)
-
-        return {
-            "pipeline": self.pipeline_,
-            "r2_scores": cv["test_r2"],
-            "r2_mean": float(np.mean(cv["test_r2"])),
-            "rmse_scores": cv["test_rmse"],
-            "rmse_mean": float(np.mean(cv["test_rmse"])),
-        }
+    # Note: This module intentionally excludes any modeling/training code.
