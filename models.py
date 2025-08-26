@@ -1,10 +1,10 @@
 from sklearn.model_selection import train_test_split, cross_validate
 from sklearn.linear_model import LinearRegression
-from preprocessor import Preprocessor
 
 
 
-def train_model(self, test_size: float = 0.3, random_state: int = 42)
+
+def linear_model(self, test_size: float = 0.3, random_state: int = 42):
     """
     Train a LinearRegression model with preprocessing and evaluation.
     """
