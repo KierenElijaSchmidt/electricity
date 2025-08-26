@@ -28,9 +28,17 @@ class Loading:
     return_X_y: bool = False                # if True, returns (X, y)
 
     def load_data(self) -> pd.DataFrame:
-        path = Path(self.filepath)
-        if not path.exists():
-            raise FileNotFoundError(f"File not found: {path}")
+        raw_path = Path(self.filepath)
+        repo_root = Path(__file__).resolve().parents[1]
+        candidates = [
+            raw_path,
+            repo_root / "raw_data" / raw_path,
+            repo_root / raw_path,
+        ]
+        path = next((p for p in candidates if p.exists()), None)
+        if path is None:
+            tried = ", ".join(str(p) for p in candidates)
+            raise FileNotFoundError(f"File not found. Tried: {tried}")
 
         # Parse date on read
         df = pd.read_csv(path, parse_dates=[self.date_col])
@@ -65,20 +73,6 @@ class Loading:
         # Optional duplicate index handling
         if self.drop_duplicate_index and not df.index.is_unique:
             df = df[~df.index.duplicated(keep="first")]
-
-        # Optional time-based features (safe: derived from index only)
-        if self.create_time_features:
-            idx = df.index
-            # If tz-aware, use .tz_convert(None) for feature extraction granularity
-            idx_naive = idx.tz_convert(None) if getattr(idx, "tz", None) is not None else idx
-            df["dow"] = idx_naive.dayofweek.astype("Int8")        # 0=Mon
-            df["is_weekend"] = (df["dow"] >= 5).astype("Int8")
-            df["dom"] = idx_naive.day.astype("Int8")
-            df["weekofyear"] = idx_naive.isocalendar().week.astype("Int16")
-            df["month"] = idx_naive.month.astype("Int8")
-            df["quarter"] = idx_naive.quarter.astype("Int8")
-            df["is_month_start"] = idx_naive.is_month_start.astype("Int8")
-            df["is_month_end"] = idx_naive.is_month_end.astype("Int8")
 
         # Optional target-based lags/rolls (safe: all use shift -> past only)
         if self.create_target_lags and self.target_col in df.columns:
