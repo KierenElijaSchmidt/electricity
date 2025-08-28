@@ -4,4 +4,3 @@ statsmodels
 xgboost
 fastapi
 uvicorn
-python-multipart
