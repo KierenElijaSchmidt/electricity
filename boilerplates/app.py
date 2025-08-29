@@ -1,85 +1,51 @@
-from flask import Flask, request, jsonify, render_template
-import pandas as pd
+import streamlit as st
 import numpy as np
-import joblib
-import os
-import sys
-import os
-from flask import Flask, request, jsonify, render_template
-from darts_xgboost import XGBoostModel
-from darts_preprocessing import DataPreprocessor
-import joblib
-app = Flask(__name__)
+import tensorflow as tf
+import matplotlib.pyplot as plt
 
-# Load model and preprocessor
-MODEL_PATH = "artifacts/xgboost_1.0/model.joblib"
-PREPROCESSOR_PATH = "artifacts/xgboost_1.0/preprocessor.joblib"
+# Load your trained Keras model once
+@st.cache_resource
+def load_model():
+    return tf.keras.models.load_model(
+        "/Users/Alessio/code/KierenElijaSchmidt/electricity/results/rnn_model.keras"
+    )
 
-try:
-    model = XGBoostModel()
-    model.load_model(MODEL_PATH)
-    preprocessor = DataPreprocessor.load_preprocessor(PREPROCESSOR_PATH)
-    print("Model and preprocessor loaded successfully")
-except Exception as e:
-    print(f"Error loading model: {e}")
-    model = None
-    preprocessor = None
+st.title("Keras Model Prediction App")
 
-@app.route('/')
-def home():
-    return render_template('index.html')
+# File uploader
+uploaded_file = st.file_uploader("Upload a .npy file", type=["npy"])
 
-@app.route('/predict', methods=['POST'])
-def predict():
-    if model is None or preprocessor is None:
-        return jsonify({'error': 'Model not loaded'}), 500
-
+if uploaded_file is not None:
     try:
-        # Get data from request
-        data = request.get_json()
+        # Load numpy data
+        data = np.load(uploaded_file)
+        st.write("Dataset shape:", data.shape)
 
-        # Convert to DataFrame
-        input_df = pd.DataFrame([data])
-
-        # Preprocess data
-        processed_data = preprocessor.transform(input_df)
+        # Load model
+        model = load_model()
 
         # Make prediction
-        prediction = model.predict(processed_data)
+        preds = model.predict(data)
 
-        return jsonify({
-            'prediction': float(prediction[0]),
-            'status': 'success'
-        })
+        st.subheader("Predictions (array):")
+        st.write(preds)
 
-    except Exception as e:
-        return jsonify({'error': str(e)}), 400
+        # --- Plot results ---
+        st.subheader("Predictions Plot")
 
-@app.route('/batch_predict', methods=['POST'])
-def batch_predict():
-    if model is None or preprocessor is None:
-        return jsonify({'error': 'Model not loaded'}), 500
+        fig, ax = plt.subplots()
+        if preds.ndim == 1 or preds.shape[1] == 1:  # regression or single output
+            ax.plot(preds, label="Predictions")
+            ax.set_xlabel("Sample Index")
+            ax.set_ylabel("Predicted Value")
+        else:  # classification probs or multi-output
+            for i in range(preds.shape[1]):
+                ax.plot(preds[:, i], label=f"Class {i}")
+            ax.set_xlabel("Sample Index")
+            ax.set_ylabel("Probability")
 
-    try:
-        # Get data from request
-        data = request.get_json()
-
-        # Convert to DataFrame
-        input_df = pd.DataFrame(data)
-
-        # Preprocess data
-        processed_data = preprocessor.transform(input_df)
-
-        # Make predictions
-        predictions = model.predict(processed_data)
-
-        return jsonify({
-            'predictions': predictions.tolist(),
-            'status': 'success'
-        })
+        ax.legend()
+        st.pyplot(fig)
 
     except Exception as e:
-        return jsonify({'error': str(e)}), 400
-
-if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+        st.error(f"Error: {e}")
