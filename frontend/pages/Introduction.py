@@ -20,28 +20,24 @@ st.markdown("# 👋 Meet the Team")
 TEAM = [
     {
         "name": "Alessio",
-        "role": "Data Science",
-        "img": "assets/team/Alessio.png",
+        "img": "frontend/assets/team/Alessio.png",
         "bio": "Alessio focused on the frontend integration.",
     },
-    # {
-    #     "name": "Bob",
-    #     "role": "Project Manager",
-    #     "img": "assets/team/bob.png",
-    #     "bio": "Bob keeps the team on track and ensures smooth delivery.",
-    # },
-    # {
-    #     "name": "Charlie",
-    #     "role": "Frontend Engineer",
-    #     "img": "assets/team/charlie.png",
-    #     "bio": "Charlie designs and builds the user-facing applications.",
-    # },
-    # {
-    #     "name": "Diana",
-    #     "role": "Research Analyst",
-    #     "img": "assets/team/diana.png",
-    #     "bio": "Diana works on data gathering, research, and insights.",
-    # },
+     {
+         "name": "Niko",
+         "img": "frontend/assets/team/Niko.png",
+         "bio": "Niko focused Machine learning models.",
+     },
+     {
+         "name": "Kieren",
+         "img": "frontend/assets/team/Kieren.png",
+         "bio": "Kieren focused on Deep learinng models and ML Ops.",
+     },
+     {
+         "name": "Filippa",
+         "img": "frontend/assets/team/Filippa.png",
+         "bio": "Filippa focused on Deep learning models and ML Ops",
+     },
 ]
 
 # -------------------------------
@@ -59,5 +55,5 @@ selected_index = image_select(
 # Show details of selected member
 # -------------------------------
 member = TEAM[selected_index]
-st.subheader(f"{member['name']} — {member['role']}")
+#st.subheader(f"{member['name']} — {member['role']}")
 st.write(member["bio"])
