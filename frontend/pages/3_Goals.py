@@ -22,15 +22,26 @@ st.markdown("""
     footer {visibility: hidden;}
     .stApp > header {visibility: hidden;}
 
+    .block-container .stColumns {
+    display: flex;
+    align-items: stretch;  /* ensures children stretch equally */
+}
+
     /* Custom card styling */
     .custom-card {
-        background-color: #2a2a2a;
-        border: 1px solid #404040;
-        border-radius: 12px;
-        padding: 24px;
-        margin: 16px 0;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-    }
+    background-color: #2a2a2a;
+    border: 1px solid #404040;
+    border-radius: 12px;
+    padding: 24px;
+    margin: 16px 0;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+
+    /* Add this */
+    min-height: 220px;  /* ensures equal height */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
 
     .icon-container {
         background-color: #404040;
@@ -88,85 +99,8 @@ st.markdown("""
         font-size: 16px;
         line-height: 1.6;
     }
-
-    .vision-card {
-        background-color: #2a2a2a;
-        border: 1px solid #404040;
-        border-radius: 12px;
-        padding: 32px;
-        margin: 16px 0;
-        text-align: center;
-    }
-
-    .vision-title {
-        color: #ff6b6b;
-        font-size: 32px;
-        font-weight: 700;
-        margin-bottom: 24px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 12px;
-    }
-
-    .vision-text {
-        color: #ffffff;
-        font-size: 20px;
-        font-style: italic;
-        line-height: 1.4;
-    }
-
-    /* Metric styling */
-    .metric-highlight {
-        color: #ff6b6b;
-        font-weight: 600;
-    }
 </style>
 """, unsafe_allow_html=True)
-
-# Objectives and Measurement Section
-st.markdown('<h1 class="section-title">Objectives and Measurement</h1>', unsafe_allow_html=True)
-
-col1, col2 = st.columns([1.2, 1])
-
-with col1:
-    st.markdown("""
-    <div class="custom-card">
-        <div class="icon-container icon-red">
-            🎯
-        </div>
-        <h2 class="card-title">Our Goal</h2>
-        <p class="card-description">
-            To develop a simple and clean UI with inputs for date, temperature forecast and
-            past demand. The output will be a predicted electricity price, visualized and numeric.
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
-
-    st.markdown("""
-    <div class="custom-card">
-        <div class="icon-container">
-            📊
-        </div>
-        <h2 class="card-title">Measurement</h2>
-        <p class="card-description">
-            Project will be measured by <span class="metric-highlight">RMSE</span>, <span class="metric-highlight">MAE</span>,
-            and <span class="metric-highlight">MAPE</span>.
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
-
-with col2:
-    st.markdown("""
-    <div class="vision-card">
-        <div class="vision-title">
-            📈 Vision
-        </div>
-        <p class="vision-text">
-            "Vision for the Electricity Price Predictor"
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
 
 # Deliverables Section
 st.markdown('<h1 class="section-title">Deliverables</h1>', unsafe_allow_html=True)
@@ -177,28 +111,24 @@ col1, col2 = st.columns(2)
 with col1:
     st.markdown("""
     <div class="custom-card">
-        <div class="icon-container">
-            💾
-        </div>
-        <h2 class="card-title">Clean Database</h2>
-        <p class="card-subtitle">Data Processing</p>
-        <p class="card-description">
-            Processing over 1.3m rows, 10 columns for time-series data
-        </p>
+        <h2 class="card-title">Type of Data</h2>
+        <ul class="card-description">
+            <li>Tabular Data (Pandas DataFrame)</li>
+            <li>29.498 data entries</li>
+            <li>Features: dates, demand, price, temperature (min and max), solar exposure, rainfall, schoolday, holiday </li>
+        </ul>
     </div>
     """, unsafe_allow_html=True)
+
 
 with col2:
     st.markdown("""
     <div class="custom-card">
-        <div class="icon-container">
-            ⚡
-        </div>
-        <h2 class="card-title">Application Consolidation</h2>
-        <p class="card-subtitle">Final Implementation</p>
-        <p class="card-description">
-            Showing final UI and model performance
-        </p>
+        <h2 class="card-title">Task Definition</h2>
+        <ul class="card-description">
+            <li>Regression Task</li>
+            <li>Predict the next days electricity price</li>
+        </ul>
     </div>
     """, unsafe_allow_html=True)
 
@@ -208,27 +138,22 @@ col1, col2 = st.columns(2)
 with col1:
     st.markdown("""
     <div class="custom-card">
-        <div class="icon-container icon-red">
-            📈
-        </div>
-        <h2 class="card-title">Exploratory Data Analysis</h2>
-        <p class="card-subtitle">Key Insights</p>
-        <p class="card-description">
-            Visuals with key insights on demand, price, temperature
-        </p>
+        <h2 class="card-title">Goals and Deliverables</h2>
+        <ul class="card-description">
+            <li>Showing model performance on User Interface</li>
+            <li>Visuals with key insights on demand and price</li>
+        </ul>
     </div>
     """, unsafe_allow_html=True)
 
 with col2:
     st.markdown("""
     <div class="custom-card">
-        <div class="icon-container">
-            ➕
-        </div>
-        <h2 class="card-title">More Everything</h2>
-        <p class="card-subtitle">Added Value</p>
-        <p class="card-description">
-            Everything that adds value on the way
-        </p>
+        <h2 class="card-title">Performance Measurement</h2>
+        <ul class="card-description">
+            <li>Mean Squared Error</li>
+            <li>Learning Curve</li>
+            <li>Visuals of predivted vs actual values</li>
+        </ul>
     </div>
     """, unsafe_allow_html=True)
