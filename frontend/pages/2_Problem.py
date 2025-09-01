@@ -6,48 +6,48 @@ st.set_page_config(
     layout="wide",
 )
 
-st.title("⚡ Electricity Price Prediction")
+#st.title("Problem")
 
 # Two columns layout
 left, right = st.columns(2)
 
 with left:
-    st.subheader("📉 Problem Description")
+    st.subheader("⚠️ Problem Description")
     st.markdown(
         """
         Electricity markets are highly volatile due to:
         - Fluctuations in supply and demand
         - Weather conditions and renewable energy integration
-        - Policy, regulations, and market behavior
+        - Policy, regulations, and market behaviour
 
         This volatility makes **predicting electricity prices** a challenging task.
         Accurate forecasts are crucial for:
-        - Energy companies optimizing operations
+        - Energy companies optimising operations
         - Traders managing risk
         - Consumers benefiting from better pricing
         """
     )
 
 with right:
-    st.subheader("🤖 Solution with Machine Learning / Deep Learning")
+    st.subheader("💡 Solution with AI")
     st.markdown(
         """
-        To tackle the problem, we can apply **data-driven predictive models**:
+        To tackle the problem, we used **data-driven predictive models**:
 
-        - **Machine Learning** methods such as:
+        - **Machine Learning**:
           - Linear Regression
           - Random Forests
-          - Gradient Boosting
+
 
         - **Deep Learning** methods for complex temporal patterns:
+          - Dense Neural Networks (RNNs)
           - Recurrent Neural Networks (RNNs)
-          - Long Short-Term Memory (LSTM) networks
-          - Transformers for time-series forecasting
+          - Time-series forecasting with Long Short-Term Memory (LSTM) networks
 
-        These models learn from **historical electricity price data** along with
+        We trained these models with **historical electricity price data** along with
         external features (weather, demand, generation mix).
 
-        The result → more **accurate and robust forecasts**, enabling smarter
+        The result → more accurate and robust forecasts, enabling smarter
         decision-making in energy markets.
         """
     )
