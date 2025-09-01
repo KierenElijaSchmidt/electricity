@@ -19,29 +19,29 @@ st.markdown("# 👋 Meet the Team")
 # Use relative paths from repo root
 TEAM = [
     {
-        "name": "Alice",
-        "role": "Data Scientist",
-        "img": "assets/team/alice.png",
-        "bio": "Alice specializes in deep learning and model deployment.",
+        "name": "Alessio",
+        "role": "Data Science",
+        "img": "assets/team/Alessio.png",
+        "bio": "Alessio focused on the frontend integration.",
     },
-    {
-        "name": "Bob",
-        "role": "Project Manager",
-        "img": "assets/team/bob.png",
-        "bio": "Bob keeps the team on track and ensures smooth delivery.",
-    },
-    {
-        "name": "Charlie",
-        "role": "Frontend Engineer",
-        "img": "assets/team/charlie.png",
-        "bio": "Charlie designs and builds the user-facing applications.",
-    },
-    {
-        "name": "Diana",
-        "role": "Research Analyst",
-        "img": "assets/team/diana.png",
-        "bio": "Diana works on data gathering, research, and insights.",
-    },
+    # {
+    #     "name": "Bob",
+    #     "role": "Project Manager",
+    #     "img": "assets/team/bob.png",
+    #     "bio": "Bob keeps the team on track and ensures smooth delivery.",
+    # },
+    # {
+    #     "name": "Charlie",
+    #     "role": "Frontend Engineer",
+    #     "img": "assets/team/charlie.png",
+    #     "bio": "Charlie designs and builds the user-facing applications.",
+    # },
+    # {
+    #     "name": "Diana",
+    #     "role": "Research Analyst",
+    #     "img": "assets/team/diana.png",
+    #     "bio": "Diana works on data gathering, research, and insights.",
+    # },
 ]
 
 # -------------------------------
