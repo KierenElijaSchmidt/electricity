@@ -6,3 +6,4 @@ fastapi
 uvicorn
 python-multipart
 streamlit
+streamlit_image_select
