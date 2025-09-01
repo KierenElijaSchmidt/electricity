@@ -1,5 +1,7 @@
 import streamlit as st
 from streamlit_image_select import image_select
+import os
+import os.path
 
 # -------------------------------
 # Page Config
@@ -17,25 +19,33 @@ st.markdown("# 👋 Meet the Team")
 # -------------------------------
 # Put your team pictures in a folder, e.g. "assets/team/"
 # Use relative paths from repo root
+# st.write("Current working directory:", os.getcwd())
+# st.write("Files in current directory:", os.listdir('.'))
+
+# # Check if your path exists
+
+# img_path = "frontend/assets/team/Alessio.png"
+# st.write(f"Path exists: {os.path.exists(img_path)}")
+
 TEAM = [
     {
         "name": "Alessio",
-        "img": "frontend/assets/team/Alessio.png",
+        "img": "assets/team/Alessio.png",
         "bio": "Alessio focused on the frontend integration.",
     },
      {
          "name": "Niko",
-         "img": "frontend/assets/team/Niko.png",
+         "img": "assets/team/Niko.png",
          "bio": "Niko focused Machine learning models.",
      },
      {
          "name": "Kieren",
-         "img": "frontend/assets/team/Kieren.png",
+         "img": "assets/team/Kieren.png",
          "bio": "Kieren focused on Deep learinng models and ML Ops.",
      },
      {
          "name": "Filippa",
-         "img": "frontend/assets/team/Filippa.png",
+         "img": "assets/team/Filippa.png",
          "bio": "Filippa focused on Deep learning models and ML Ops",
      },
 ]
