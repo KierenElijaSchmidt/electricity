@@ -55,5 +55,4 @@ selected_index = image_select(
 # Show details of selected member
 # -------------------------------
 member = TEAM[selected_index]
-#st.subheader(f"{member['name']} — {member['role']}")
 st.write(member["bio"])
