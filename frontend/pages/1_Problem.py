@@ -29,5 +29,5 @@ This volatility makes **predicting electricity prices** a challenging task.
 Accurate forecasts are crucial for:
 - Energy companies optimising operations
 - Traders managing risk
-- Consumers benefiting from better pricing
+- Consumers benefiting from better pricingsss
 """)
