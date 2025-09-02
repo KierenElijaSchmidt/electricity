@@ -7,7 +7,7 @@ import os.path
 # Page Config
 # -------------------------------
 st.set_page_config(
-    page_title="Team Introduction",
+    page_title="Team Overview",
     page_icon="👥",
     initial_sidebar_state="collapsed",
 )
