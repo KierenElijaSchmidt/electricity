@@ -6,6 +6,7 @@ st.set_page_config(
     layout="wide",
 )
 
+<<<<<<< HEAD:frontend/pages/1_Problem.py
 st.title("⚡ Electricity Price Prediction")
 
 # Two columns layout
@@ -13,6 +14,13 @@ left, right = st.columns(2)
 
 with left:
     st.subheader("📉 Problem Description")
+=======
+# Create 3 columns: empty - content - empty
+_, center, _ = st.columns([1, 2, 1])
+
+with center:
+    st.subheader("⚠️ Problem Description")
+>>>>>>> 38a27cb (added grpahs to problem page):frontend/pages/2_Problem.py
     st.markdown(
         """
         Electricity markets are highly volatile due to:
@@ -21,6 +29,7 @@ with left:
         - Policy, regulations, and market behavior
 
         This volatility makes **predicting electricity prices** a challenging task.
+
         Accurate forecasts are crucial for:
         - Energy companies optimizing operations
         - Traders managing risk
@@ -28,6 +37,7 @@ with left:
         """
     )
 
+<<<<<<< HEAD:frontend/pages/1_Problem.py
 with right:
     st.subheader("🤖 Solution with Machine Learning / Deep Learning")
     st.markdown(
@@ -51,3 +61,10 @@ with right:
         decision-making in energy markets.
         """
     )
+=======
+st.image("assets/barcharts/rrp_vs_date.png", use_container_width=True)
+
+st.image("assets/barcharts/rrp_weather_2018_2020.png", use_container_width=True)
+
+st.image("assets/barcharts/rrp_hazelwood.png", use_container_width=True)
+>>>>>>> 38a27cb (added grpahs to problem page):frontend/pages/2_Problem.py
