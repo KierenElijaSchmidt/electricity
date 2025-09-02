@@ -1,17 +1,25 @@
-import os
-import io
+import os, io
+from pathlib import Path
 import numpy as np
 import tensorflow as tf
 from fastapi import FastAPI, UploadFile, File
 from fastapi.responses import JSONResponse
 import uvicorn
 
-# Resolve model path relative to this file (works locally + Cloud Run)
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-MODEL_PATH = os.getenv("MODEL_PATH", os.path.join(BASE_DIR, "rnn_model.keras"))
+BASE_DIR = Path(__file__).resolve().parent              # .../electricity/electricity
+REPO_ROOT = BASE_DIR.parent                             # .../electricity
+DEFAULT_MODEL = REPO_ROOT / "results" / "rnn_model.keras"
 
-# Load model once at startup
-model = tf.keras.models.load_model(MODEL_PATH)
+MODEL_PATH = Path(os.getenv("MODEL_PATH", str(DEFAULT_MODEL))).expanduser()
+print(f"[api] MODEL_PATH={MODEL_PATH} exists={MODEL_PATH.exists()}")
+
+# Optional: lazy-load so the server starts even if the path is wrong
+_model = None
+def get_model():
+    global _model
+    if _model is None:
+        _model = tf.keras.models.load_model(MODEL_PATH)
+    return _model
 
 app = FastAPI()
 
@@ -23,16 +31,11 @@ async def root():
 async def predict(file: UploadFile = File(...)):
     try:
         contents = await file.read()
-
-        # Load .npy or .npz safely
         X = np.load(io.BytesIO(contents), allow_pickle=False)
         if isinstance(X, np.lib.npyio.NpzFile):
             X = X[list(X.files)[0]]
-
         X = np.asarray(X)
-
-        # Predict and flatten to 1D list
-        y = model.predict(X).flatten().tolist()
+        y = get_model().predict(X).flatten().tolist()
         return {"input_shape": list(X.shape), "prediction": y}
     except Exception as e:
         return JSONResponse(status_code=400, content={"error": str(e)})
