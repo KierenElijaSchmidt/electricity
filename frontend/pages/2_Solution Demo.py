@@ -172,3 +172,16 @@ if y_pred is not None:
             ax.set_ylabel("Value")
             ax.legend()
             st.pyplot(fig)
+
+            st.subheader("Zoomed Actual vs Predicted (last 200 days)")
+            # Take the last 200 values (adjust the number if needed)
+            y_true_zoom = np.array(y_series).reshape(-1)[-200:]
+            y_pred_zoom = np.array(y_pred).reshape(-1)[-200:]
+
+            fig_zoom, ax_zoom = plt.subplots()
+            ax_zoom.plot(y_true_zoom, label="Actual (y_test)")
+            ax_zoom.plot(y_pred_zoom, label="Predicted (y_pred)")
+            ax_zoom.set_xlabel("Time step")
+            ax_zoom.set_ylabel("Value")
+            ax_zoom.legend()
+            st.pyplot(fig_zoom)
