@@ -6,13 +6,27 @@ import os.path
 # -------------------------------
 # Page Config
 # -------------------------------
-st.set_page_config(
-    page_title="Team Overview",
-    page_icon="👥",
-    initial_sidebar_state="collapsed",
-)
 
-st.markdown("# 👋 Meet the Team")
+st.markdown("""
+    <style>
+    .section-title {
+        font-size: 34px;
+        font-weight: 800;
+        margin: 12px 0 24px 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: #ffffff;
+    }
+    .section-title span.icon {
+        font-size: 34px; /* same as text */
+        line-height: 1;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+
+st.markdown('<div class="section-title"><span class="icon">👥</span> About Us</div>', unsafe_allow_html=True)
 
 # -------------------------------
 # Example team members

@@ -6,10 +6,32 @@ import matplotlib.pyplot as plt
 from pathlib import Path
 from PIL import Image
 
+# ✅ Make this page behave like the others
+st.set_page_config(page_title="Live AI Demo", page_icon="📡", layout="wide", initial_sidebar_state="collapsed")
+
+# ✅ Same title CSS used everywhere
+st.markdown("""
+    <style>
+    .section-title {
+        font-size: 34px;
+        font-weight: 800;
+        margin: 12px 0 24px 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: #ffffff;
+    }
+    .section-title span.icon {
+        font-size: 34px; /* same as text */
+        line-height: 1;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+# --- Title (same structure as other pages) ---
+st.markdown('<div class="section-title"><span class="icon">📡</span> Live AI Demo</div>', unsafe_allow_html=True)
 
 API_URL = os.getenv("API_URL", "http://localhost:8080/predict")
-
-st.title("📡 Forecast via FastAPI (RNN)")
 st.caption(f"Using API: {API_URL}")
 
 # -------------------------------
