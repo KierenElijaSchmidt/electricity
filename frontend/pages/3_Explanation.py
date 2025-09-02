@@ -1,159 +1,80 @@
 import streamlit as st
 
-# Configure page
-st.set_page_config(
-    page_title="Electricity Price Predictor",
-    page_icon="⚡",
-    layout="wide",
-    initial_sidebar_state="collapsed"
-)
+st.set_page_config(page_title="Next Steps", page_icon="🚀", layout="wide")
 
-# Custom CSS for dark theme and styling
+# --------- CSS ----------
 st.markdown("""
 <style>
-    /* Main app background */
-    .stApp {
-        background-color: #1a1a1a;
-        color: #ffffff;
+    .section-title{
+        font-size: 34px; font-weight: 800; margin: 8px 0 24px 0;
     }
-
-    /* Hide default streamlit elements */
-    .stDeployButton {display:none;}
-    footer {visibility: hidden;}
-    .stApp > header {visibility: hidden;}
-
-    .block-container .stColumns {
-    display: flex;
-    align-items: stretch;  /* ensures children stretch equally */
-}
-
-    /* Custom card styling */
-    .custom-card {
-    background-color: #2a2a2a;
-    border: 1px solid #404040;
-    border-radius: 12px;
-    padding: 24px;
-    margin: 16px 0;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-
-    /* Add this */
-    min-height: 220px;  /* ensures equal height */
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-}
-
-    .icon-container {
-        background-color: #404040;
-        border-radius: 8px;
-        width: 48px;
-        height: 48px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-bottom: 16px;
-        font-size: 24px;
+    .subtitle{
+        color:#cfcfcf; font-size:18px; margin-bottom:28px;
     }
-
-    .icon-red {
-        background-color: #4a2c2c;
-        color: #ff6b6b;
+    .card{
+        background:#2a2a2a; border:1px solid #3b3b3b; border-radius:14px;
+        padding:22px; height:100%; box-shadow:0 6px 14px rgba(0,0,0,.25);
     }
-
-    .section-title {
-        color: #ffffff;
-        font-size: 48px;
-        font-weight: 700;
-        text-align: center;
-        margin: 60px 0 40px 0;
-        position: relative;
+    .card h3{
+        margin:0 0 10px 0; font-size:22px; font-weight:700;
     }
-
-    .section-title::after {
-        content: '';
-        display: block;
-        width: 80px;
-        height: 4px;
-        background-color: #ff6b6b;
-        margin: 16px auto 0;
-        border-radius: 2px;
+    .pill{
+        display:inline-block; padding:6px 10px; font-size:12px; font-weight:700;
+        border-radius:999px; background:#3b3b3b; color:#ffd166; margin-bottom:12px;
+        letter-spacing:.3px; text-transform:uppercase;
     }
-
-    .card-title {
-        color: #ffffff;
-        font-size: 24px;
-        font-weight: 600;
-        margin-bottom: 12px;
-    }
-
-    .card-subtitle {
-        color: #888888;
-        font-size: 14px;
-        margin-bottom: 16px;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-    }
-
-    .card-description {
-        color: #cccccc;
-        font-size: 16px;
-        line-height: 1.6;
+    .card ul{margin:10px 0 0 18px; font-size:16px; line-height:1.6; color:#e8e8e8;}
+    .footer{
+        margin-top:26px; color:#bdbdbd; font-size:14px;
     }
 </style>
 """, unsafe_allow_html=True)
 
-# Deliverables Section
-st.markdown('<h1 class="section-title">Deliverables</h1>', unsafe_allow_html=True)
+# --------- Header ----------
+st.markdown('<div class="section-title">🚀 Next Steps & Roadmap</div>', unsafe_allow_html=True)
+st.markdown('<div class="subtitle">Where we’re taking the predictor—from flexible inputs to real-world pilots and commercialization.</div>', unsafe_allow_html=True)
 
-# First row of deliverables
-col1, col2 = st.columns(2)
+# --------- Cards ----------
+c1, c2, c3 = st.columns(3)
 
-with col1:
+with c1:
     st.markdown("""
-    <div class="custom-card">
-        <h2 class="card-title">Type of Data</h2>
-        <ul class="card-description">
-            <li>Tabular Data (Pandas DataFrame)</li>
-            <li>29.498 data entries</li>
-            <li>Features: dates, demand, price, temperature (min and max), solar exposure, rainfall, schoolday, holiday </li>
+    <div class="card">
+        <div class="pill">Flexibility</div>
+        <h3>Make the Predictor More Flexible</h3>
+        <ul>
+            <li><b>Currently:</b> accepts NumPy vectors.</li>
+            <li><b>Next:</b> accept any data type (CSV, JSON, DB tables).</li>
+            <li><b>Bonus:</b> text input via a simple chatbot interface.</li>
         </ul>
+        <div class="footer">Goal: easier inputs, faster experimentation.</div>
     </div>
     """, unsafe_allow_html=True)
 
-
-with col2:
+with c2:
     st.markdown("""
-    <div class="custom-card">
-        <h2 class="card-title">Task Definition</h2>
-        <ul class="card-description">
-            <li>Regression Task</li>
-            <li>Predict the next days electricity price</li>
+    <div class="card">
+        <div class="pill">Collaboration</div>
+        <h3>Work with Real Companies</h3>
+        <ul>
+            <li>Analyze their <b>specific datasets</b>.</li>
+            <li>Enrich with <b>external data sources</b> (weather, market, policy).</li>
+            <li>Build a <b>customized pilot</b> that fits their workflow.</li>
         </ul>
+        <div class="footer">Outcome: measurable value on real operations.</div>
     </div>
     """, unsafe_allow_html=True)
 
-# Second row of deliverables
-col1, col2 = st.columns(2)
-
-with col1:
+with c3:
     st.markdown("""
-    <div class="custom-card">
-        <h2 class="card-title">Goals and Deliverables</h2>
-        <ul class="card-description">
-            <li>Showing model performance on User Interface</li>
-            <li>Visuals with key insights on demand and price</li>
+    <div class="card">
+        <div class="pill">Commercialization</div>
+        <h3>From Pilot to Product</h3>
+        <ul>
+            <li>Scale a successful pilot into production.</li>
+            <li>Offer <b>forecasting solutions</b> as a service or license.</li>
+            <li>Provide support, SLAs, and dashboards.</li>
         </ul>
-    </div>
-    """, unsafe_allow_html=True)
-
-with col2:
-    st.markdown("""
-    <div class="custom-card">
-        <h2 class="card-title">Performance Measurement</h2>
-        <ul class="card-description">
-            <li>Mean Squared Error</li>
-            <li>Learning Curve</li>
-            <li>Visuals of predivted vs actual values</li>
-        </ul>
+        <div class="footer">Path: pilot ➜ scale ➜ sell.</div>
     </div>
     """, unsafe_allow_html=True)
