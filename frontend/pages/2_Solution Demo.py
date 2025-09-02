@@ -3,6 +3,9 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from pathlib import Path
+from PIL import Image
+
 
 API_URL = os.getenv("API_URL", "http://localhost:8080/predict")
 
@@ -162,26 +165,49 @@ if y_pred is not None:
             r2 = 1.0 - ss_res / ss_tot if ss_tot > 0 else np.nan
 
             st.subheader("Evaluation")
-            st.write({"MAE": mae, "RMSE": rmse, "R2": r2})
+            st.write({"MAE": mae, "RMSE": rmse})
 
-            st.subheader("Actual vs Predicted")
-            fig, ax = plt.subplots()
-            ax.plot(y_series, label="Actual (y_test)")
-            ax.plot(y_pred, label="Predicted (y_pred)")
-            ax.set_xlabel("Index")
-            ax.set_ylabel("Value")
-            ax.legend()
-            st.pyplot(fig)
+            st.subheader("Zoomed Actual vs Predicted")
 
-            st.subheader("Zoomed Actual vs Predicted (last 200 days)")
-            # Take the last 200 values (adjust the number if needed)
-            y_true_zoom = np.array(y_series).reshape(-1)[-200:]
-            y_pred_zoom = np.array(y_pred).reshape(-1)[-200:]
+            # Convert to 1D numpy arrays and align lengths safely
+            _y_true = np.array(y_series).reshape(-1)
+            _y_pred = np.array(y_pred).reshape(-1)
+            n_total = int(min(_y_true.shape[0], _y_pred.shape[0]))
 
-            fig_zoom, ax_zoom = plt.subplots()
-            ax_zoom.plot(y_true_zoom, label="Actual (y_test)")
-            ax_zoom.plot(y_pred_zoom, label="Predicted (y_pred)")
-            ax_zoom.set_xlabel("Time step")
-            ax_zoom.set_ylabel("Value")
-            ax_zoom.legend()
-            st.pyplot(fig_zoom)
+            if n_total == 0:
+                st.warning("No data to plot. Check y_test / y_pred.")
+            else:
+                # Slider to control how many last points to display
+                default_n = 200 if n_total >= 200 else n_total
+                n_last = st.slider(
+                    "Show last N days",
+                    min_value=10,
+                    max_value=n_total,
+                    value=default_n,
+                    step=10,
+                    help="Adjust to zoom into the recent portion of the series."
+                )
+
+                y_true_zoom = _y_true[-n_last:]
+                y_pred_zoom = _y_pred[-n_last:]
+
+                fig_zoom, ax_zoom = plt.subplots()
+                ax_zoom.plot(y_true_zoom, label="Actual (y_test)")
+                ax_zoom.plot(y_pred_zoom, label="Predicted (y_pred)")
+                ax_zoom.set_xlabel("Time step (last N)")
+                ax_zoom.set_ylabel("Value")
+                ax_zoom.legend()
+                st.pyplot(fig_zoom)
+
+
+
+                st.subheader("Learning Curves")
+
+                # Resolve: frontend/pages/<this_file>.py  ->  frontend/assets/curves/learning.png
+                img_path = Path(__file__).resolve().parents[1] / "assets" / "curves" / "learning.png"
+
+                try:
+                    image = Image.open(img_path)
+                    st.image(image, caption="Training vs. Validation (Learning Curves)", use_container_width=True)
+                except FileNotFoundError:
+                    st.warning(f"Image not found at: {img_path}\nMake sure the file exists and the path is correct.")
