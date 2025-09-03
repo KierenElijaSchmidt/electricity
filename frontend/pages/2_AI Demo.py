@@ -42,9 +42,9 @@ def _find_default_model() -> Path:
     """Look for a model in common places so it works locally and in containers."""
     here = Path(__file__).resolve().parent
     candidates = [
-        here / "results" / "rnn_model.h5",          # ./results/rnn_model.keras
-        here / "rnn_model.h5",                      # ./rnn_model.keras
-        here.parent / "results" / "rnn_model.h5",   # ../results/rnn_model.keras
+        here / "results" / "rnn_model.keras",          # ./results/rnn_model.keras
+        here / "rnn_model.keras",                      # ./rnn_model.keras
+        here.parent / "results" / "rnn_model.keras",   # ../results/rnn_model.keras
     ]
     for p in candidates:
         if p.exists():
