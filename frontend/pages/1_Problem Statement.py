@@ -120,7 +120,7 @@ with st.container():
                Supply shocks (generator outages, low renewable input) can also cause sudden price surges."""
         )
     with col_chart:
-        chart("assets/barcharts/rrp_vs_date.png", "Electricity Price (RRP) over Time")
+        chart("assets/barcharts/rrp_electricity.png", "Electricity Price (RRP) over Time")
 
 # --- Second: Weather & Renewables ---
 with st.container():
