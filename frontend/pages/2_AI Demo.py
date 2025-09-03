@@ -280,7 +280,8 @@ if y_pred is not None:
                 st.pyplot(fig_zoom, use_container_width=False)
 
                 st.subheader("Learning Curves: Showing the error of the model over time")
-                img_path = Path(__file__).resolve().parents[1] / "frontend" / "assets" / "curves" / "output.png"
+                # if this file lives in: <repo>/frontend/pages/your_page.py
+                img_path = Path(__file__).resolve().parents[1] / "assets" / "curves" / "output.png"
                 try:
                     image = Image.open(img_path)
                     st.image(image, caption="Training vs. Validation (Learning Curves)", width=560, use_container_width=False)
