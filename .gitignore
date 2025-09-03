@@ -1,3 +1,4 @@
 raw_data/
 notebooks/
 __pycache__/
+frontend/.streamlit/secrets.toml
