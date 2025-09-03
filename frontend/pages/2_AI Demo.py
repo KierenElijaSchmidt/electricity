@@ -1,10 +1,14 @@
-import os, io, requests
+import os, io
 import streamlit as st
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from pathlib import Path
 from PIL import Image
+import tensorflow as tf  # ← NEW: we run the model locally
+
+# --- Settings / quiet logs (same intent as your API) -------------------------
+os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "2")
 
 # ✅ Make this page behave like the others
 st.set_page_config(page_title="Live AI Demo", page_icon="📡", layout="wide", initial_sidebar_state="collapsed")
@@ -31,11 +35,53 @@ st.markdown("""
 # --- Title (same structure as other pages) ---
 st.markdown('<div class="section-title"><span class="icon">📡</span> Live AI Demo</div>', unsafe_allow_html=True)
 
-API_URL = os.getenv("API_URL", "http://localhost:8080/predict")
-st.caption(f"Using API: {API_URL}")
+# -------------------------------
+# Model discovery + loading (mirrors your API)
+# -------------------------------
+def _find_default_model() -> Path:
+    """Look for a model in common places so it works locally and in containers."""
+    here = Path(__file__).resolve().parent
+    candidates = [
+        here / "results" / "rnn_model.keras",          # ./results/rnn_model.keras
+        here / "rnn_model.keras",                      # ./rnn_model.keras
+        here.parent / "results" / "rnn_model.keras",   # ../results/rnn_model.keras
+    ]
+    for p in candidates:
+        if p.exists():
+            return p
+    return candidates[0]  # default suggestion even if it doesn't exist yet
+
+MODEL_PATH = Path(os.getenv("MODEL_PATH", str(_find_default_model()))).expanduser()
+
+@st.cache_resource(show_spinner=True)
+def load_keras_model(model_path: Path):
+    # (Optional) friendlier GPU behavior
+    try:
+        gpus = tf.config.list_physical_devices("GPU")
+        for gpu in gpus:
+            tf.config.experimental.set_memory_growth(gpu, True)
+    except Exception:
+        pass
+
+    if not model_path.exists():
+        raise FileNotFoundError(f"Model file not found at {model_path}")
+    return tf.keras.models.load_model(model_path)
+
+try:
+    with st.spinner("Loading model…"):
+        model = load_keras_model(MODEL_PATH)
+    st.caption(f"Model loaded from: {MODEL_PATH}")
+    # Helpful debug: what the model expects/produces
+    try:
+        st.caption(f"Model input_shape: {model.input_shape} → output_shape: {model.output_shape}")
+    except Exception:
+        pass
+except Exception as e:
+    st.error(f"Could not load model: {e}")
+    st.stop()
 
 # -------------------------------
-# Helpers
+# Helpers (unchanged)
 # -------------------------------
 def load_array_from_file(f, label):
     ext = os.path.splitext(f.name)[1].lower()
@@ -62,7 +108,16 @@ def ensure_3d_X(X):
         return X
     if X.ndim == 2:
         st.info("Detected 2D array for X_test. Provide timesteps to reshape to (n_samples, timesteps, n_features).")
-        timesteps = st.number_input("Timesteps (for reshaping X_test)", min_value=1, value=1, step=1, key="ts")
+        # If model has a fixed timestep, offer it as a default
+        default_ts = 1
+        try:
+            # model.input_shape often looks like (None, T, F)
+            if isinstance(model.input_shape, tuple) and len(model.input_shape) >= 3 and model.input_shape[1] is not None:
+                default_ts = int(model.input_shape[1])
+        except Exception:
+            pass
+
+        timesteps = st.number_input("Timesteps (for reshaping X_test)", min_value=1, value=default_ts, step=1, key="ts")
         if timesteps <= 1:
             st.warning("Timesteps=1 → model sees single-step sequences. If your model needs T>1, increase this.")
         n_samples = X.shape[0]
@@ -77,21 +132,12 @@ def ensure_3d_X(X):
         st.stop()
 
 def reduce_preds_to_1d(preds):
-    """
-    Convert various RNN output shapes to a 1D series for plotting/metrics.
-    - (N,) -> return as is
-    - (N,1) -> squeeze
-    - (N,H) multi-horizon -> choose horizon h
-    - (N,T,1) -> take last step by default (selectable)
-    - (N,T,H) -> choose step and/or horizon
-    """
     preds = np.asarray(preds)
     if preds.ndim == 1:
         return preds, {"mode": "1d", "info": preds.shape}
     if preds.ndim == 2:
         if preds.shape[1] == 1:
             return preds.ravel(), {"mode": "Nx1", "info": preds.shape}
-        # Multi-horizon
         h = st.number_input("Select horizon index (0-based)", min_value=0, max_value=preds.shape[1]-1, value=0, step=1, key="h_idx")
         return preds[:, h], {"mode": "NxH", "h": h, "info": preds.shape}
     if preds.ndim == 3:
@@ -99,7 +145,6 @@ def reduce_preds_to_1d(preds):
         if K == 1:
             step = st.number_input("Which time step to plot? (0..T-1)", min_value=0, max_value=T-1, value=T-1, step=1, key="t_idx")
             return preds[:, step, 0], {"mode": "NxTx1", "t": step, "info": preds.shape}
-        # General (N,T,K): pick step and horizon
         step = st.number_input("Select time step (0..T-1)", min_value=0, max_value=T-1, value=T-1, step=1, key="t_idx2")
         hor = st.number_input("Select horizon/feature (0..K-1)", min_value=0, max_value=K-1, value=0, step=1, key="k_idx2")
         return preds[:, step, hor], {"mode": "NxTxK", "t": step, "k": hor, "info": preds.shape}
@@ -139,34 +184,29 @@ if x_file is not None:
     X = ensure_3d_X(X_raw)
     st.write("The shape (e.g., dimensions) of your data is:", X.shape)
 
-    # Serialize as .npy to the API
-    buf = io.BytesIO()
-    np.save(buf, X)
-    buf.seek(0)
-    files = {"file": ("input.npy", buf, "application/octet-stream")}
-
+    # --- LOCAL INFERENCE (no API) -------------------------------------------
     try:
-        with st.spinner("Contacting API and running prediction..."):
-            r = requests.post(API_URL, files=files, timeout=60)
-            r.raise_for_status()
-            resp = r.json()
-        preds = np.array(resp.get("prediction", []))
+        # dtype often matters for TF speed/compat
+        X = np.asarray(X).astype(np.float32)
+
+        with st.spinner("Running prediction locally…"):
+            preds = model.predict(X, verbose=0)
+
+        preds = np.array(preds)
         if preds.size == 0:
-            st.error("API returned no predictions.")
+            st.error("Model returned no predictions.")
             st.stop()
+
         # Normalize predictions to 1D for plots/metrics
         y_pred, pred_info = reduce_preds_to_1d(preds)
-        if "input_shape" in resp:
-            st.caption(f"API reported input_shape: {resp['input_shape']}")
+
         st.success("Prediction complete!")
         st.subheader("First 10 Predictions")
-        st.write(y_pred[:10], "...")
-        st.caption(f"Prediction shape: {preds.shape}")
-    except requests.exceptions.RequestException as re:
-        st.error(f"API request failed: {re}")
-        st.info("Check that your FastAPI service is running and API_URL is correct.")
+        st.write(y_pred[:10], "…")
+        st.caption(f"Raw prediction tensor shape: {preds.shape}")
+
     except Exception as e:
-        st.error(f"Error: {e}")
+        st.error(f"Error during local inference: {e}")
 
 # -------------------------------
 # 2) (Optional) Upload y_test for evaluation/plot
@@ -186,10 +226,8 @@ if y_pred is not None:
             ss_tot = float(np.sum((y_series - np.mean(y_series))**2))
             r2 = 1.0 - ss_res / ss_tot if ss_tot > 0 else np.nan
 
-
             st.subheader("Evaluation")
 
-            # You can make the baseline editable (defaults to your current 44.58)
             baseline_mae = st.number_input(
                 "Baseline MAE",
                 min_value=0.0,
@@ -198,33 +236,19 @@ if y_pred is not None:
                 help="Baseline reference to compare against."
             )
 
-            # Core stats
             mae_now = float(mae)
             delta_abs = mae_now - baseline_mae           # negative = improvement
-            improve_abs = baseline_mae - mae_now         # positive = improvement
-            improve_pct = (improve_abs / baseline_mae * 100.0) if baseline_mae > 0 else float("nan")
+            improve_pct = (baseline_mae - mae_now) / baseline_mae * 100.0 if baseline_mae > 0 else float("nan")
 
-            # KPI row
             c1, c2, c3 = st.columns(3)
             c1.metric("MAE (↓ better)", f"{mae_now:.2f}", delta=f"{delta_abs:+.2f}", delta_color="inverse")
             c2.metric("Baseline MAE", f"{baseline_mae:.2f}")
-
-            # Improvement (positive = good → green)
             if baseline_mae > 0:
-                improve_pct = (baseline_mae - mae_now) / baseline_mae * 100.0
-                c3.metric(
-                    "Improvement vs baseline",
-                    f"{improve_pct:.1f}%",
-                    delta=f"{improve_pct:+.1f}%",
-                    delta_color="normal"  # green when positive, red when negative
-                )
+                c3.metric("Improvement vs baseline", f"{improve_pct:.1f}%", delta=f"{improve_pct:+.1f}%", delta_color="normal")
             else:
                 c3.metric("Improvement vs baseline", "—")
 
-
             st.subheader("Chart: Actual vs Predicted Values")
-
-            # Convert to 1D numpy arrays and align lengths safely
             _y_true = np.array(y_series).reshape(-1)
             _y_pred = np.array(y_pred).reshape(-1)
             n_total = int(min(_y_true.shape[0], _y_pred.shape[0]))
@@ -232,7 +256,6 @@ if y_pred is not None:
             if n_total == 0:
                 st.warning("No data to plot. Check y_test / y_pred.")
             else:
-                # Slider to control how many last points to display
                 default_n = 200 if n_total >= 200 else n_total
                 n_last = st.slider(
                     "Show last N days",
@@ -246,7 +269,6 @@ if y_pred is not None:
                 y_true_zoom = _y_true[-n_last:]
                 y_pred_zoom = _y_pred[-n_last:]
 
-                # smaller figure
                 fig_zoom, ax_zoom = plt.subplots(figsize=(6, 3), dpi=120)
                 ax_zoom.plot(y_true_zoom, label="Actual prices")
                 ax_zoom.plot(y_pred_zoom, label="Predicted prices")
@@ -258,18 +280,9 @@ if y_pred is not None:
                 st.pyplot(fig_zoom, use_container_width=False)
 
                 st.subheader("Learning Curves: Showing the error of the model over time")
-
-                # Resolve: frontend/pages/<this_file>.py  ->  frontend/assets/curves/learning.png
                 img_path = Path(__file__).resolve().parents[1] / "frontend" / "assets" / "curves" / "output.png"
-
                 try:
                     image = Image.open(img_path)
-                    # smaller image
-                    st.image(
-                        image,
-                        caption="Training vs. Validation (Learning Curves)",
-                        width=560,
-                        use_container_width=False
-                    )
+                    st.image(image, caption="Training vs. Validation (Learning Curves)", width=560, use_container_width=False)
                 except FileNotFoundError:
                     st.warning(f"Image not found at: {img_path}\nMake sure the file exists and the path is correct.")
