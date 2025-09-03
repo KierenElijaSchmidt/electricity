@@ -120,7 +120,7 @@ with st.container():
                Supply shocks (generator outages, low renewable input) can also cause sudden price surges."""
         )
     with col_chart:
-        chart("assets/barcharts/rrp_electricity.png", "Electricity Price (RRP) over Time")
+        chart("frontend/assets/barcharts/rrp_electricity.png", "Electricity Price (RRP) over Time")
 
 # --- Second: Weather & Renewables ---
 with st.container():
@@ -132,7 +132,7 @@ with st.container():
                This dual effect makes forecasting more complex."""
         )
     with col_chart:
-        chart("assets/barcharts/rrp_weather_2018_2020.png", "Electricity Price vs Weather Conditions")
+        chart("frontend/assets/barcharts/rrp_weather_2018_2020.png", "Electricity Price vs Weather Conditions")
 
 # --- Third: Policy & Market Behaviour ---
 with st.container():
@@ -144,4 +144,4 @@ with st.container():
                Example: the Hazelwood coal plant closure (2017) led to a significant price increase."""
         )
     with col_chart:
-        chart("assets/barcharts/rrp_hazelwood.png", "Impact of Hazelwood Closure on RRP")
+        chart("frontend/assets/barcharts/rrp_hazelwood.png", "Impact of Hazelwood Closure on RRP")

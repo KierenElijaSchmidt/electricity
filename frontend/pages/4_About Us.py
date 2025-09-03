@@ -44,22 +44,22 @@ st.markdown('<div class="section-title"><span class="icon">👥</span> About Us<
 TEAM = [
     {
         "name": "Alessio",
-        "img": "assets/team/Alessio.png",
+        "img": "frontend/assets/team/Alessio.png",
         "bio": "Alessio focused on the frontend integration.",
     },
      {
          "name": "Niko",
-         "img": "assets/team/Niko.png",
+         "img": "frontend/assets/team/Niko.png",
          "bio": "Niko focused on Machine learning models.",
      },
      {
          "name": "Kieren",
-         "img": "assets/team/Kieren.png",
+         "img": "frontend/assets/team/Kieren.png",
          "bio": "Kieren focused on Deep learinng models and ML Ops.",
      },
      {
          "name": "Filippa",
-         "img": "assets/team/Filippa.png",
+         "img": "frontend/assets/team/Filippa.png",
          "bio": "Filippa focused on Deep learning models and ML Ops",
      },
 ]

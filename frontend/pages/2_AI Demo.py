@@ -260,7 +260,7 @@ if y_pred is not None:
                 st.subheader("Learning Curves: Showing the error of the model over time")
 
                 # Resolve: frontend/pages/<this_file>.py  ->  frontend/assets/curves/learning.png
-                img_path = Path(__file__).resolve().parents[1] / "assets" / "curves" / "output.png"
+                img_path = Path(__file__).resolve().parents[1] / "frontend" / "assets" / "curves" / "output.png"
 
                 try:
                     image = Image.open(img_path)
