@@ -61,14 +61,13 @@ st.markdown("""
     .footer {
         margin-top:26px;
         color:#bdbdbd;
-        font-size:14px;
+        font-size:16px;
     }
 </style>
 """, unsafe_allow_html=True)
 
 # --------- Header ----------
 st.markdown('<div class="section-title"><span class="icon">🚀</span> Next Steps</div>', unsafe_allow_html=True)
-st.markdown('<div class="subtitle">Where we’re taking the predictor—from flexible inputs to real-world pilots and commercialization.</div>', unsafe_allow_html=True)
 
 # --------- Cards ----------
 c1, c2, c3 = st.columns(3)
@@ -101,7 +100,7 @@ with c2:
                 <li>Build a <b>customized pilot</b> that fits their workflow.</li>
             </ul>
         </div>
-        <div class="footer">Outcome: measurable value on real operations.</div>
+        <div class="footer">Outcome: measurable value for companies.</div>
     </div>
     """, unsafe_allow_html=True)
 

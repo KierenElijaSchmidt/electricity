@@ -145,16 +145,3 @@ with st.container():
         )
     with col_chart:
         chart("assets/barcharts/rrp_hazelwood.png", "Impact of Hazelwood Closure on RRP")
-
-# --- Highlight section: Why forecasts matter ---
-st.markdown("""
-<div class="highlight-box">
-    This volatility makes <b>predicting electricity prices</b> a challenging task. <br><br>
-    Accurate forecasts are crucial for:
-    <ul>
-        <li>⚡ Energy companies optimising operations</li>
-        <li>📈 Traders managing risk</li>
-        <li>🏠 Consumers benefiting from better pricing</li>
-    </ul>
-</div>
-""", unsafe_allow_html=True)

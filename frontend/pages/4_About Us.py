@@ -50,7 +50,7 @@ TEAM = [
      {
          "name": "Niko",
          "img": "assets/team/Niko.png",
-         "bio": "Niko focused Machine learning models.",
+         "bio": "Niko focused on Machine learning models.",
      },
      {
          "name": "Kieren",

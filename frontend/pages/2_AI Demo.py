@@ -128,7 +128,7 @@ def reduce_y_test_to_1d(y, target_len, hint=None):
 # -------------------------------
 # 1) Upload X_test (3D for RNN)
 # -------------------------------
-x_file = st.file_uploader("Upload X_test (.csv, .npy, .npz) — expects (N, T, F)", type=["csv", "npy", "npz"])
+x_file = st.file_uploader("Upload your input data with features such as weather, past prices or date.", type=["csv", "npy", "npz"])
 
 y_pred = None
 pred_info = None
@@ -137,7 +137,7 @@ X = None
 if x_file is not None:
     X_raw = load_array_from_file(x_file, "X_test")
     X = ensure_3d_X(X_raw)
-    st.write("X_test shape (sending to API):", X.shape)
+    st.write("The shape (e.g., dimensions) of your data is:", X.shape)
 
     # Serialize as .npy to the API
     buf = io.BytesIO()
@@ -158,10 +158,10 @@ if x_file is not None:
         y_pred, pred_info = reduce_preds_to_1d(preds)
         if "input_shape" in resp:
             st.caption(f"API reported input_shape: {resp['input_shape']}")
-        st.success("Prediction complete via API!")
-        st.subheader("Predictions (y_pred) — first few")
+        st.success("Prediction complete!")
+        st.subheader("First 10 Predictions")
         st.write(y_pred[:10], "...")
-        st.caption(f"Raw prediction shape: {preds.shape} | reduced via {pred_info}")
+        st.caption(f"Prediction shape: {preds.shape}")
     except requests.exceptions.RequestException as re:
         st.error(f"API request failed: {re}")
         st.info("Check that your FastAPI service is running and API_URL is correct.")
@@ -172,7 +172,7 @@ if x_file is not None:
 # 2) (Optional) Upload y_test for evaluation/plot
 # -------------------------------
 if y_pred is not None:
-    y_file = st.file_uploader("Optional: Upload y_test (.csv, .npy, .npz)", type=["csv", "npy", "npz"], key="y_file")
+    y_file = st.file_uploader("Optional: Upload data showing the actual prices", type=["csv", "npy", "npz"], key="y_file")
     if y_file is not None:
         y_raw = load_array_from_file(y_file, "y_test")
         y_series = reduce_y_test_to_1d(y_raw, target_len=len(y_pred), hint=pred_info)
@@ -186,10 +186,43 @@ if y_pred is not None:
             ss_tot = float(np.sum((y_series - np.mean(y_series))**2))
             r2 = 1.0 - ss_res / ss_tot if ss_tot > 0 else np.nan
 
-            st.subheader("Evaluation")
-            st.write({"MAE": mae, "RMSE": rmse})
 
-            st.subheader("Zoomed Actual vs Predicted")
+            st.subheader("Evaluation")
+
+            # You can make the baseline editable (defaults to your current 44.58)
+            baseline_mae = st.number_input(
+                "Baseline MAE",
+                min_value=0.0,
+                value=float(44.58),
+                step=0.01,
+                help="Baseline reference to compare against."
+            )
+
+            # Core stats
+            mae_now = float(mae)
+            delta_abs = mae_now - baseline_mae           # negative = improvement
+            improve_abs = baseline_mae - mae_now         # positive = improvement
+            improve_pct = (improve_abs / baseline_mae * 100.0) if baseline_mae > 0 else float("nan")
+
+            # KPI row
+            c1, c2, c3 = st.columns(3)
+            c1.metric("MAE (↓ better)", f"{mae_now:.2f}", delta=f"{delta_abs:+.2f}", delta_color="inverse")
+            c2.metric("Baseline MAE", f"{baseline_mae:.2f}")
+
+            # Improvement (positive = good → green)
+            if baseline_mae > 0:
+                improve_pct = (baseline_mae - mae_now) / baseline_mae * 100.0
+                c3.metric(
+                    "Improvement vs baseline",
+                    f"{improve_pct:.1f}%",
+                    delta=f"{improve_pct:+.1f}%",
+                    delta_color="normal"  # green when positive, red when negative
+                )
+            else:
+                c3.metric("Improvement vs baseline", "—")
+
+
+            st.subheader("Chart: Actual vs Predicted Values")
 
             # Convert to 1D numpy arrays and align lengths safely
             _y_true = np.array(y_series).reshape(-1)
@@ -213,23 +246,30 @@ if y_pred is not None:
                 y_true_zoom = _y_true[-n_last:]
                 y_pred_zoom = _y_pred[-n_last:]
 
-                fig_zoom, ax_zoom = plt.subplots()
-                ax_zoom.plot(y_true_zoom, label="Actual (y_test)")
-                ax_zoom.plot(y_pred_zoom, label="Predicted (y_pred)")
-                ax_zoom.set_xlabel("Time step (last N)")
-                ax_zoom.set_ylabel("Value")
-                ax_zoom.legend()
-                st.pyplot(fig_zoom)
+                # smaller figure
+                fig_zoom, ax_zoom = plt.subplots(figsize=(6, 3), dpi=120)
+                ax_zoom.plot(y_true_zoom, label="Actual prices")
+                ax_zoom.plot(y_pred_zoom, label="Predicted prices")
+                ax_zoom.set_xlabel("Last N Days")
+                ax_zoom.set_ylabel("Electricity Price (RRP)")
+                ax_zoom.legend(fontsize=9)
+                ax_zoom.tick_params(labelsize=9)
+                fig_zoom.tight_layout()
+                st.pyplot(fig_zoom, use_container_width=False)
 
-
-
-                st.subheader("Learning Curves")
+                st.subheader("Learning Curves: Showing the error of the model over time")
 
                 # Resolve: frontend/pages/<this_file>.py  ->  frontend/assets/curves/learning.png
-                img_path = Path(__file__).resolve().parents[1] / "assets" / "curves" / "learning.png"
+                img_path = Path(__file__).resolve().parents[1] / "assets" / "curves" / "output.png"
 
                 try:
                     image = Image.open(img_path)
-                    st.image(image, caption="Training vs. Validation (Learning Curves)", use_container_width=True)
+                    # smaller image
+                    st.image(
+                        image,
+                        caption="Training vs. Validation (Learning Curves)",
+                        width=560,
+                        use_container_width=False
+                    )
                 except FileNotFoundError:
                     st.warning(f"Image not found at: {img_path}\nMake sure the file exists and the path is correct.")
