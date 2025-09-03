@@ -16,6 +16,6 @@ st.write("# Electricity Price Prediction")
 
 
 
-st.image("assets/title/electricity.jpg", use_container_width=True)
+st.image("frontend/assets/title/electricity.jpg", use_container_width=True)
 
 st.markdown('''The codebase for this project can be accessed here: https://github.com/KierenElijaSchmidt/electricity''')
