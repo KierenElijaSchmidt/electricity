@@ -65,7 +65,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # --- Title ---
-st.markdown('<div class="section-title"><span class="icon">⚠️</span> Problem Statement</div>', unsafe_allow_html=True)
+st.markdown('<div class="section-title"><span class="icon">⚠️</span> Why it matters</div>', unsafe_allow_html=True)
 
 # ---------- Helpers ----------
 def _resolve_asset(rel_path: str) -> Path:
